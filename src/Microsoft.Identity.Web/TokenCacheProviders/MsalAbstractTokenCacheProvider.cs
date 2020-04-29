@@ -1,12 +1,12 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+using System.IdentityModel.Tokens.Jwt;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 using Microsoft.Identity.Client;
-using System.IdentityModel.Tokens.Jwt;
-using System.Threading.Tasks;
 
 namespace Microsoft.Identity.Web.TokenCacheProviders
 {
@@ -40,12 +40,12 @@ namespace Microsoft.Identity.Web.TokenCacheProviders
         /// <summary>
         /// Azure AD options.
         /// </summary>
-        protected readonly IOptions<MicrosoftIdentityOptions> _microsoftIdentityOptions;
+        protected readonly IOptions<MicrosoftIdentityOptions> microsoftIdentityOptions;
 
         /// <summary>
         /// Http accessor.
         /// </summary>
-        protected readonly IHttpContextAccessor _httpContextAccessor;
+        protected readonly IHttpContextAccessor httpContextAccessor;
 
         /// <summary>
         /// Constructor of the abstract token cache provider.
@@ -54,8 +54,8 @@ namespace Microsoft.Identity.Web.TokenCacheProviders
         /// <param name="httpContextAccessor"></param>
         protected MsalAbstractTokenCacheProvider(IOptions<MicrosoftIdentityOptions> microsoftIdentityOptions, IHttpContextAccessor httpContextAccessor)
         {
-            _microsoftIdentityOptions = microsoftIdentityOptions;
-            _httpContextAccessor = httpContextAccessor;
+            this.microsoftIdentityOptions = microsoftIdentityOptions;
+            this.httpContextAccessor = httpContextAccessor;
         }
 
         // if you want to ensure that no concurrent write takes place, use this notification to place a lock on the entry
@@ -92,16 +92,16 @@ namespace Microsoft.Identity.Web.TokenCacheProviders
         {
             if (isAppTokenCache)
             {
-                return $"{_microsoftIdentityOptions.Value.ClientId}_AppTokenCache";
+                return $"{microsoftIdentityOptions.Value.ClientId}_AppTokenCache";
             }
             else
             {
                 // In the case of Web Apps, the cache key is the user account Id, and the expectation is that AcquireTokenSilent
                 // should return a token otherwise this might require a challenge.
                 // In the case Web APIs, the token cache key is a hash of the access token used to call the Web API
-                JwtSecurityToken jwtSecurityToken = _httpContextAccessor.HttpContext.GetTokenUsedToCallWebAPI();
+                JwtSecurityToken jwtSecurityToken = httpContextAccessor.HttpContext.GetTokenUsedToCallWebAPI();
                 return (jwtSecurityToken != null) ? jwtSecurityToken.RawSignature
-                                                                  : _httpContextAccessor.HttpContext.User.GetMsalAccountId();
+                                                                  : httpContextAccessor.HttpContext.User.GetMsalAccountId();
             }
         }
 

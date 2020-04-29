@@ -34,12 +34,12 @@ namespace Microsoft.Identity.Web.TokenCacheProviders.Session
             ILogger<MsalSessionTokenCacheProvider> logger)
             : base(microsoftIdentityOptions, httpContextAccessor)
         {
-            _logger = logger;
+            this.logger = logger;
         }
 
-        private HttpContext CurrentHttpContext => _httpContextAccessor.HttpContext;
+        private HttpContext CurrentHttpContext => httpContextAccessor.HttpContext;
 
-        private ILogger _logger;
+        private ILogger logger;
         private static readonly ReaderWriterLockSlim s_sessionLock = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
 
         protected override async Task<byte[]> ReadCacheBytesAsync(string cacheKey)
@@ -51,11 +51,11 @@ namespace Microsoft.Identity.Web.TokenCacheProviders.Session
             {
                 if (CurrentHttpContext.Session.TryGetValue(cacheKey, out byte[] blob))
                 {
-                    _logger.LogInformation($"Deserializing session {CurrentHttpContext.Session.Id}, cacheId {cacheKey}");
+                    logger.LogInformation($"Deserializing session {CurrentHttpContext.Session.Id}, cacheId {cacheKey}");
                 }
                 else
                 {
-                    _logger.LogInformation($"CacheId {cacheKey} not found in session {CurrentHttpContext.Session.Id}");
+                    logger.LogInformation($"CacheId {cacheKey} not found in session {CurrentHttpContext.Session.Id}");
                 }
 
                 return blob;
@@ -71,7 +71,7 @@ namespace Microsoft.Identity.Web.TokenCacheProviders.Session
             s_sessionLock.EnterWriteLock();
             try
             {
-                _logger.LogInformation($"Serializing session {CurrentHttpContext.Session.Id}, cacheId {cacheKey}");
+                logger.LogInformation($"Serializing session {CurrentHttpContext.Session.Id}, cacheId {cacheKey}");
 
                 // Reflect changes in the persistent store
                 CurrentHttpContext.Session.Set(cacheKey, bytes);
@@ -88,7 +88,7 @@ namespace Microsoft.Identity.Web.TokenCacheProviders.Session
             s_sessionLock.EnterWriteLock();
             try
             {
-                _logger.LogInformation($"Clearing session {CurrentHttpContext.Session.Id}, cacheId {cacheKey}");
+                logger.LogInformation($"Clearing session {CurrentHttpContext.Session.Id}, cacheId {cacheKey}");
 
                 // Reflect changes in the persistent store
                 CurrentHttpContext.Session.Remove(cacheKey);

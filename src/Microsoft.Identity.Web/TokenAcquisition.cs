@@ -1,6 +1,13 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+using System;
+using System.Collections.Generic;
+using System.IdentityModel.Tokens.Jwt;
+using System.Linq;
+using System.Net;
+using System.Security.Claims;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Extensions;
@@ -10,13 +17,6 @@ using Microsoft.Extensions.Primitives;
 using Microsoft.Identity.Client;
 using Microsoft.Identity.Web.TokenCacheProviders;
 using Microsoft.Net.Http.Headers;
-using System;
-using System.Collections.Generic;
-using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
-using System.Net;
-using System.Security.Claims;
-using System.Threading.Tasks;
 
 namespace Microsoft.Identity.Web
 {
@@ -41,29 +41,29 @@ namespace Microsoft.Identity.Web
             IOptions<ConfidentialClientApplicationOptions> applicationOptions,
             ILogger<TokenAcquisition> logger)
         {
-            _httpContextAccessor = httpContextAccessor;
-            _microsoftIdentityOptions = microsoftIdentityOptions.Value;
-            _applicationOptions = applicationOptions.Value;
-            _tokenCacheProvider = tokenCacheProvider;
-            _logger = logger;
+            this.httpContextAccessor = httpContextAccessor;
+            this.microsoftIdentityOptions = microsoftIdentityOptions.Value;
+            this.applicationOptions = applicationOptions.Value;
+            this.tokenCacheProvider = tokenCacheProvider;
+            this.logger = logger;
         }
 
-        private readonly MicrosoftIdentityOptions _microsoftIdentityOptions;
-        private readonly ConfidentialClientApplicationOptions _applicationOptions;
+        private readonly MicrosoftIdentityOptions microsoftIdentityOptions;
+        private readonly ConfidentialClientApplicationOptions applicationOptions;
 
-        private readonly IMsalTokenCacheProvider _tokenCacheProvider;
+        private readonly IMsalTokenCacheProvider tokenCacheProvider;
 
-        private IConfidentialClientApplication _application;
-        private readonly IHttpContextAccessor _httpContextAccessor;
+        private IConfidentialClientApplication application;
+        private readonly IHttpContextAccessor httpContextAccessor;
 
-        private HttpContext CurrentHttpContext => _httpContextAccessor.HttpContext;
+        private HttpContext CurrentHttpContext => httpContextAccessor.HttpContext;
 
-        private readonly ILogger _logger;
+        private readonly ILogger logger;
 
         /// <summary>
         /// Scopes which are already requested by MSAL.NET. They should not be re-requested;.
         /// </summary>
-        private readonly string[] _scopesRequestedByMsal = new string[]
+        private readonly string[] scopesRequestedByMsal = new string[]
         {
             OidcConstants.ScopeOpenId,
             OidcConstants.ScopeProfile,
@@ -128,20 +128,20 @@ namespace Microsoft.Identity.Web
                     (context.HttpContext.User.Identity as ClaimsIdentity).AddClaims(context.Principal.Claims);
                 }
 
-                _application = await GetOrBuildConfidentialClientApplicationAsync().ConfigureAwait(false);
+                application = await GetOrBuildConfidentialClientApplicationAsync().ConfigureAwait(false);
 
                 // Do not share the access token with ASP.NET Core otherwise ASP.NET will cache it and will not send the OAuth 2.0 request in
                 // case a further call to AcquireTokenByAuthorizationCodeAsync in the future is required for incremental consent (getting a code requesting more scopes)
                 // Share the ID Token though
-                var result = await _application
-                    .AcquireTokenByAuthorizationCode(scopes.Except(_scopesRequestedByMsal), context.ProtocolMessage.Code)
+                var result = await application
+                    .AcquireTokenByAuthorizationCode(scopes.Except(scopesRequestedByMsal), context.ProtocolMessage.Code)
                     .ExecuteAsync()
                     .ConfigureAwait(false);
                 context.HandleCodeRedemption(null, result.IdToken);
             }
             catch (MsalException ex)
             {
-                _logger.LogInformation(ex, "Exception occured while adding an account to the cache from the auth code. ");
+                logger.LogInformation(ex, "Exception occured while adding an account to the cache from the auth code. ");
                 throw;
             }
         }
@@ -198,18 +198,18 @@ namespace Microsoft.Identity.Web
             }
 
             // Use MSAL to get the right token to call the API
-            _application = await GetOrBuildConfidentialClientApplicationAsync().ConfigureAwait(false);
+            application = await GetOrBuildConfidentialClientApplicationAsync().ConfigureAwait(false);
             string accessToken;
 
             try
             {
-                accessToken = await GetAccessTokenOnBehalfOfUserFromCacheAsync(_application, CurrentHttpContext.User, scopes, tenant)
+                accessToken = await GetAccessTokenOnBehalfOfUserFromCacheAsync(application, CurrentHttpContext.User, scopes, tenant)
                     .ConfigureAwait(false);
             }
             catch (MsalUiRequiredException ex)
             {
                 // GetAccessTokenForUserAsync is an abstraction that can be called from a Web App or a Web API
-                _logger.LogInformation(ex.Message);
+                logger.LogInformation(ex.Message);
 
                 // to get a token for a Web API on behalf of the user, but not necessarily with the on behalf of OAuth2.0
                 // flow as this one only applies to Web APIs.
@@ -221,8 +221,8 @@ namespace Microsoft.Identity.Web
                     // In the case the token is a JWE (encrypted token), we use the decrypted token.
                     string tokenUsedToCallTheWebApi = validatedToken.InnerToken == null ? validatedToken.RawData
                                                 : validatedToken.InnerToken.RawData;
-                    var result = await _application
-                                        .AcquireTokenOnBehalfOf(scopes.Except(_scopesRequestedByMsal),
+                    var result = await application
+                                        .AcquireTokenOnBehalfOf(scopes.Except(scopesRequestedByMsal),
                                                                 new UserAssertion(tokenUsedToCallTheWebApi))
                                         .ExecuteAsync()
                                         .ConfigureAwait(false);
@@ -257,11 +257,11 @@ namespace Microsoft.Identity.Web
             }
 
             // Use MSAL to get the right token to call the API
-            _application = await GetOrBuildConfidentialClientApplicationAsync().ConfigureAwait(false);
+            application = await GetOrBuildConfidentialClientApplicationAsync().ConfigureAwait(false);
 
             AuthenticationResult result;
-            result = await _application
-                   .AcquireTokenForClient(scopes.Except(_scopesRequestedByMsal))
+            result = await application
+                   .AcquireTokenForClient(scopes.Except(scopesRequestedByMsal))
                    .ExecuteAsync()
                    .ConfigureAwait(false);
 
@@ -281,7 +281,7 @@ namespace Microsoft.Identity.Web
             IAccount account = null;
 
             // For B2C, we should remove all accounts of the user regardless the user flow
-            if (_microsoftIdentityOptions.IsB2C)
+            if (microsoftIdentityOptions.IsB2C)
             {
                 var b2cAccounts = await app.GetAccountsAsync().ConfigureAwait(false);
 
@@ -290,7 +290,7 @@ namespace Microsoft.Identity.Web
                     await app.RemoveAsync(b2cAccount).ConfigureAwait(false);
                 }
 
-                _tokenCacheProvider?.ClearAsync().ConfigureAwait(false);
+                tokenCacheProvider?.ClearAsync().ConfigureAwait(false);
             }
             else
             {
@@ -306,7 +306,7 @@ namespace Microsoft.Identity.Web
                 if (account != null)
                 {
                     await app.RemoveAsync(account).ConfigureAwait(false);
-                    _tokenCacheProvider?.ClearAsync().ConfigureAwait(false);
+                    tokenCacheProvider?.ClearAsync().ConfigureAwait(false);
                 }
             }
         }
@@ -332,8 +332,8 @@ namespace Microsoft.Identity.Web
                 }
             }
 
-            string consentUrl = $"{_application.Authority}/oauth2/v2.0/authorize?client_id={_applicationOptions.ClientId}"
-                + $"&response_type=code&redirect_uri={_application.AppConfig.RedirectUri}"
+            string consentUrl = $"{application.Authority}/oauth2/v2.0/authorize?client_id={applicationOptions.ClientId}"
+                + $"&response_type=code&redirect_uri={application.AppConfig.RedirectUri}"
                 + $"&response_mode=query&scope=offline_access%20{string.Join("%20", scopes)}";
 
             IDictionary<string, string> parameters = new Dictionary<string, string>()
@@ -366,11 +366,11 @@ namespace Microsoft.Identity.Web
         /// <returns></returns>
         private async Task<IConfidentialClientApplication> GetOrBuildConfidentialClientApplicationAsync()
         {
-            if (_application == null)
+            if (application == null)
             {
-                _application = await BuildConfidentialClientApplicationAsync().ConfigureAwait(false);
+                application = await BuildConfidentialClientApplicationAsync().ConfigureAwait(false);
             }
-            return _application;
+            return application;
         }
 
         /// <summary>
@@ -385,11 +385,11 @@ namespace Microsoft.Identity.Web
                 request.Scheme,
                 request.Host,
                 request.PathBase,
-                _microsoftIdentityOptions.CallbackPath.Value ?? string.Empty);
+                microsoftIdentityOptions.CallbackPath.Value ?? string.Empty);
 
-            if (!_applicationOptions.Instance.EndsWith("/"))
+            if (!applicationOptions.Instance.EndsWith("/"))
             {
-                _applicationOptions.Instance += "/";
+                applicationOptions.Instance += "/";
             }
 
             string authority;
@@ -397,34 +397,34 @@ namespace Microsoft.Identity.Web
 
             try
             {
-                if (_microsoftIdentityOptions.IsB2C)
+                if (microsoftIdentityOptions.IsB2C)
                 {
-                    authority = $"{ _applicationOptions.Instance}tfp/{_microsoftIdentityOptions.Domain}/{_microsoftIdentityOptions.DefaultUserFlow}";
+                    authority = $"{ applicationOptions.Instance}tfp/{microsoftIdentityOptions.Domain}/{microsoftIdentityOptions.DefaultUserFlow}";
                     app = ConfidentialClientApplicationBuilder
-                        .CreateWithApplicationOptions(_applicationOptions)
+                        .CreateWithApplicationOptions(applicationOptions)
                         .WithRedirectUri(currentUri)
                         .WithB2CAuthority(authority)
                         .Build();
                 }
                 else
                 {
-                    authority = $"{ _applicationOptions.Instance}{_applicationOptions.TenantId}/";
+                    authority = $"{ applicationOptions.Instance}{applicationOptions.TenantId}/";
 
                     app = ConfidentialClientApplicationBuilder
-                        .CreateWithApplicationOptions(_applicationOptions)
+                        .CreateWithApplicationOptions(applicationOptions)
                         .WithRedirectUri(currentUri)
                         .WithAuthority(authority)
                         .Build();
                 }
 
                 // Initialize token cache providers
-                await _tokenCacheProvider.InitializeAsync(app.AppTokenCache).ConfigureAwait(false);
-                await _tokenCacheProvider.InitializeAsync(app.UserTokenCache).ConfigureAwait(false);
+                await tokenCacheProvider.InitializeAsync(app.AppTokenCache).ConfigureAwait(false);
+                await tokenCacheProvider.InitializeAsync(app.UserTokenCache).ConfigureAwait(false);
                 return app;
             }
             catch (Exception ex)
             {
-                _logger.LogInformation(ex, "Exception acquiring token for a confidential client. ");
+                logger.LogInformation(ex, "Exception acquiring token for a confidential client. ");
                 throw;
             }
         }
@@ -454,7 +454,7 @@ namespace Microsoft.Identity.Web
 
                 // Special case for guest users as the Guest oid / tenant id are not surfaced.
                 // B2C should not follow this logic since loginHint is not present
-                if (!_microsoftIdentityOptions.IsB2C && account == null)
+                if (!microsoftIdentityOptions.IsB2C && account == null)
                 {
                     if (loginHint == null)
                     {
@@ -467,7 +467,7 @@ namespace Microsoft.Identity.Web
             }
 
             // If it is B2C and could not get an account (most likely because there is no tid claims), try to get it by user flow
-            if (_microsoftIdentityOptions.IsB2C && account == null)
+            if (microsoftIdentityOptions.IsB2C && account == null)
             {
                 string currentUserFlow = claimsPrincipal.GetUserFlowId();
                 account = GetAccountByUserFlow(await application.GetAccountsAsync().ConfigureAwait(false), currentUserFlow);
@@ -498,14 +498,14 @@ namespace Microsoft.Identity.Web
             AuthenticationResult result;
 
             // Acquire an access token as a B2C authority
-            if (_microsoftIdentityOptions.IsB2C)
+            if (microsoftIdentityOptions.IsB2C)
             {
                 string authority = application.Authority.Replace(
                     new Uri(application.Authority).PathAndQuery,
-                    $"/tfp/{_microsoftIdentityOptions.Domain}/{_microsoftIdentityOptions.DefaultUserFlow}");
+                    $"/tfp/{microsoftIdentityOptions.Domain}/{microsoftIdentityOptions.DefaultUserFlow}");
 
                 result = await application
-                    .AcquireTokenSilent(scopes.Except(_scopesRequestedByMsal), account)
+                    .AcquireTokenSilent(scopes.Except(scopesRequestedByMsal), account)
                     .WithB2CAuthority(authority)
                     .ExecuteAsync()
                     .ConfigureAwait(false);
@@ -517,7 +517,7 @@ namespace Microsoft.Identity.Web
                 // Acquire an access token as another AAD authority
                 string authority = application.Authority.Replace(new Uri(application.Authority).PathAndQuery, $"/{tenant}/");
                 result = await application
-                    .AcquireTokenSilent(scopes.Except(_scopesRequestedByMsal), account)
+                    .AcquireTokenSilent(scopes.Except(scopesRequestedByMsal), account)
                     .WithAuthority(authority)
                     .ExecuteAsync()
                     .ConfigureAwait(false);
@@ -526,7 +526,7 @@ namespace Microsoft.Identity.Web
             else
             {
                 result = await application
-                   .AcquireTokenSilent(scopes.Except(_scopesRequestedByMsal), account)
+                   .AcquireTokenSilent(scopes.Except(scopesRequestedByMsal), account)
                    .ExecuteAsync()
                    .ConfigureAwait(false);
                 return result.AccessToken;

@@ -18,12 +18,12 @@ namespace Microsoft.Identity.Web.TokenCacheProviders.Distributed
         /// <summary>
         /// .NET Core Memory cache.
         /// </summary>
-        private readonly IDistributedCache _distributedCache;
+        private readonly IDistributedCache distributedCache;
 
         /// <summary>
         /// Msal memory token cache options.
         /// </summary>
-        private readonly DistributedCacheEntryOptions _cacheOptions;
+        private readonly DistributedCacheEntryOptions cacheOptions;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MsalDistributedTokenCacheAdapter"/> class.
@@ -40,23 +40,23 @@ namespace Microsoft.Identity.Web.TokenCacheProviders.Distributed
                                             IOptions<DistributedCacheEntryOptions> cacheOptions) 
             : base(microsoftIdentityOptions, httpContextAccessor)
         {
-            _distributedCache = memoryCache;
-            _cacheOptions = cacheOptions.Value;
+            distributedCache = memoryCache;
+            this.cacheOptions = cacheOptions.Value;
         }
 
         protected override async Task RemoveKeyAsync(string cacheKey)
         {
-            await _distributedCache.RemoveAsync(cacheKey).ConfigureAwait(false);
+            await distributedCache.RemoveAsync(cacheKey).ConfigureAwait(false);
         }
 
         protected override async Task<byte[]> ReadCacheBytesAsync(string cacheKey)
         {
-            return await _distributedCache.GetAsync(cacheKey).ConfigureAwait(false);
+            return await distributedCache.GetAsync(cacheKey).ConfigureAwait(false);
         }
 
         protected override async Task WriteCacheBytesAsync(string cacheKey, byte[] bytes)
         {
-            await _distributedCache.SetAsync(cacheKey, bytes, _cacheOptions).ConfigureAwait(false);
+            await distributedCache.SetAsync(cacheKey, bytes, cacheOptions).ConfigureAwait(false);
         }
     }
 }

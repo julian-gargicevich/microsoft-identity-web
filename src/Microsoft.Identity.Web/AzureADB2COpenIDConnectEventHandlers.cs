@@ -1,18 +1,18 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.OpenIdConnect;
-using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 
 namespace Microsoft.Identity.Web
 {
     internal class AzureADB2COpenIDConnectEventHandlers
     {
-        private IDictionary<string, string> _userFlowToIssuerAddress =
+        private IDictionary<string, string> userFlowToIssuerAddress =
             new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
         public AzureADB2COpenIDConnectEventHandlers(string schemeName, MicrosoftIdentityOptions options)
@@ -78,13 +78,13 @@ namespace Microsoft.Identity.Web
 
         private string BuildIssuerAddress(RedirectContext context, string defaultUserFlow, string userFlow)
         {
-            if (!_userFlowToIssuerAddress.TryGetValue(userFlow, out var issuerAddress))
+            if (!userFlowToIssuerAddress.TryGetValue(userFlow, out var issuerAddress))
             {
-                _userFlowToIssuerAddress[userFlow] = context.ProtocolMessage.IssuerAddress.ToLowerInvariant()
+                userFlowToIssuerAddress[userFlow] = context.ProtocolMessage.IssuerAddress.ToLowerInvariant()
                     .Replace($"/{defaultUserFlow.ToLowerInvariant()}/", $"/{userFlow.ToLowerInvariant()}/");
             }
 
-            return _userFlowToIssuerAddress[userFlow];
+            return userFlowToIssuerAddress[userFlow];
         }
     }
 }

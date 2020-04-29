@@ -18,12 +18,12 @@ namespace Microsoft.Identity.Web.TokenCacheProviders.InMemory
         /// <summary>
         /// .NET Core Memory cache.
         /// </summary>
-        private readonly IMemoryCache _memoryCache;
+        private readonly IMemoryCache memoryCache;
 
         /// <summary>
         /// Msal memory token cache options.
         /// </summary>
-        private readonly MsalMemoryTokenCacheOptions _cacheOptions;
+        private readonly MsalMemoryTokenCacheOptions cacheOptions;
 
         /// <summary>
         /// Constructor.
@@ -38,25 +38,25 @@ namespace Microsoft.Identity.Web.TokenCacheProviders.InMemory
                                             IOptions<MsalMemoryTokenCacheOptions> cacheOptions) :
             base(microsoftIdentityOptions, httpContextAccessor)
         {
-            _memoryCache = memoryCache;
-            _cacheOptions = cacheOptions.Value;
+            this.memoryCache = memoryCache;
+            this.cacheOptions = cacheOptions.Value;
         }
 
         protected override Task RemoveKeyAsync(string cacheKey)
         {
-            _memoryCache.Remove(cacheKey);
+            memoryCache.Remove(cacheKey);
             return Task.CompletedTask;
         }
 
         protected override Task<byte[]> ReadCacheBytesAsync(string cacheKey)
         {
-            byte[] tokenCacheBytes = (byte[])_memoryCache.Get(cacheKey);
+            byte[] tokenCacheBytes = (byte[])memoryCache.Get(cacheKey);
             return Task.FromResult(tokenCacheBytes);
         }
 
         protected override Task WriteCacheBytesAsync(string cacheKey, byte[] bytes)
         {
-            _memoryCache.Set(cacheKey, bytes, _cacheOptions.SlidingExpiration);
+            memoryCache.Set(cacheKey, bytes, cacheOptions.SlidingExpiration);
             return Task.CompletedTask;
         }
     }

@@ -1,13 +1,13 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
-using System.Threading.Tasks;
 
 namespace Microsoft.Identity.Web.UI.Areas.MicrosoftIdentity.Controllers
 {
@@ -17,11 +17,11 @@ namespace Microsoft.Identity.Web.UI.Areas.MicrosoftIdentity.Controllers
     [Route("[area]/[controller]/[action]")]
     public class AccountController : Controller
     {
-        private readonly IOptionsMonitor<MicrosoftIdentityOptions> _options;
+        private readonly IOptionsMonitor<MicrosoftIdentityOptions> options;
 
         public AccountController(IOptionsMonitor<MicrosoftIdentityOptions> azureADOptions)
         {
-            _options = azureADOptions;
+            options = azureADOptions;
         }
 
         [HttpGet("{scheme?}")]
@@ -55,7 +55,7 @@ namespace Microsoft.Identity.Web.UI.Areas.MicrosoftIdentity.Controllers
 
             var redirectUrl = Url.Content("~/");
             var properties = new AuthenticationProperties { RedirectUri = redirectUrl };
-            properties.Items["policy"] = _options.CurrentValue?.ResetPasswordPolicyId;
+            properties.Items["policy"] = options.CurrentValue?.ResetPasswordPolicyId;
             return Challenge(properties, scheme);
         }
 
@@ -71,7 +71,7 @@ namespace Microsoft.Identity.Web.UI.Areas.MicrosoftIdentity.Controllers
 
             var redirectUrl = Url.Content("~/");
             var properties = new AuthenticationProperties { RedirectUri = redirectUrl };
-            properties.Items["policy"] = _options.CurrentValue?.EditProfilePolicyId;
+            properties.Items["policy"] = options.CurrentValue?.EditProfilePolicyId;
             return Challenge(properties, scheme);
         }
     }

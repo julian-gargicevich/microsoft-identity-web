@@ -13,11 +13,11 @@ namespace Microsoft.Identity.Web.Resource
     /// </summary>
     public class JwtBearerMiddlewareDiagnostics : IJwtBearerMiddlewareDiagnostics
     {
-        private readonly ILogger _logger;
+        private readonly ILogger logger;
 
         public JwtBearerMiddlewareDiagnostics(ILogger<JwtBearerMiddlewareDiagnostics> logger)
         {
-            _logger = logger;
+            this.logger = logger;
         }
 
         /// <summary>
@@ -69,35 +69,35 @@ namespace Microsoft.Identity.Web.Resource
 
         private async Task OnMessageReceivedAsync(MessageReceivedContext context)
         {
-            _logger.LogDebug($"1. Begin {nameof(OnMessageReceivedAsync)}");
+            logger.LogDebug($"1. Begin {nameof(OnMessageReceivedAsync)}");
 
             // Place a breakpoint here and examine the bearer token (context.Request.Headers.HeaderAuthorization / context.Request.Headers["Authorization"])
             // Use https://jwt.ms to decode the token and observe claims
             await s_onMessageReceived(context).ConfigureAwait(false);
-            _logger.LogDebug($"1. End - {nameof(OnMessageReceivedAsync)}");
+            logger.LogDebug($"1. End - {nameof(OnMessageReceivedAsync)}");
         }
 
         private async Task OnAuthenticationFailedAsync(AuthenticationFailedContext context)
         {
-            _logger.LogDebug($"99. Begin {nameof(OnAuthenticationFailedAsync)}");
+            logger.LogDebug($"99. Begin {nameof(OnAuthenticationFailedAsync)}");
 
             // Place a breakpoint here and examine context.Exception
             await s_onAuthenticationFailed(context).ConfigureAwait(false);
-            _logger.LogDebug($"99. End - {nameof(OnAuthenticationFailedAsync)}");
+            logger.LogDebug($"99. End - {nameof(OnAuthenticationFailedAsync)}");
         }
 
         private async Task OnTokenValidatedAsync(TokenValidatedContext context)
         {
-            _logger.LogDebug($"2. Begin {nameof(OnTokenValidatedAsync)}");
+            logger.LogDebug($"2. Begin {nameof(OnTokenValidatedAsync)}");
             await s_onTokenValidated(context).ConfigureAwait(false);
-            _logger.LogDebug($"2. End - {nameof(OnTokenValidatedAsync)}");
+            logger.LogDebug($"2. End - {nameof(OnTokenValidatedAsync)}");
         }
 
         private async Task OnChallengeAsync(JwtBearerChallengeContext context)
         {
-            _logger.LogDebug($"55. Begin {nameof(OnChallengeAsync)}");
+            logger.LogDebug($"55. Begin {nameof(OnChallengeAsync)}");
             await s_onChallenge(context).ConfigureAwait(false);
-            _logger.LogDebug($"55. End - {nameof(OnChallengeAsync)}");
+            logger.LogDebug($"55. End - {nameof(OnChallengeAsync)}");
         }
     }
 }

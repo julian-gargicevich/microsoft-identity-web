@@ -29,11 +29,11 @@ namespace Microsoft.Identity.Web.Resource
         /// <summary>
         /// A list of all Issuers across the various Azure AD instances.
         /// </summary>
-        private readonly ISet<string> _issuerAliases;
+        private readonly ISet<string> issuerAliases;
 
         internal /* internal for test */ AadIssuerValidator(IEnumerable<string> aliases)
         {
-            _issuerAliases = new HashSet<string>(aliases, StringComparer.OrdinalIgnoreCase);
+            issuerAliases = new HashSet<string>(aliases, StringComparer.OrdinalIgnoreCase);
         }
 
         /// <summary>
@@ -59,7 +59,6 @@ namespace Microsoft.Identity.Web.Resource
                 var issuerMetadata = s_configManager.GetConfigurationAsync().ConfigureAwait(false).GetAwaiter().GetResult();
                 string authorityHost;
                 try
-
                 {
                     authorityHost = new Uri(aadAuthority).Authority;
                 }
@@ -152,10 +151,10 @@ namespace Microsoft.Identity.Web.Resource
                 var actualIssuerUri = new Uri(actualIssuer);
 
                 // Template authority is in the aliases
-                return _issuerAliases.Contains(issuerFromTemplateUri.Authority) &&
+                return issuerAliases.Contains(issuerFromTemplateUri.Authority) &&
 
                        // "iss" authority is in the aliases
-                       _issuerAliases.Contains(actualIssuerUri.Authority) &&
+                       issuerAliases.Contains(actualIssuerUri.Authority) &&
 
                       // Template authority ends in the tenantId
                       IsValidTidInLocalPath(tenantId, issuerFromTemplateUri) &&

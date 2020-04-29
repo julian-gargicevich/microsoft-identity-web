@@ -15,11 +15,11 @@ namespace Microsoft.Identity.Web.Resource
     /// </summary>
     public class OpenIdConnectMiddlewareDiagnostics : IOpenIdConnectMiddlewareDiagnostics
     {
-        private readonly ILogger _logger;
+        private readonly ILogger logger;
 
         public OpenIdConnectMiddlewareDiagnostics(ILogger<OpenIdConnectMiddlewareDiagnostics> logger)
         {
-            _logger = logger;
+            this.logger = logger;
         }
 
         // Summary:
@@ -108,13 +108,13 @@ namespace Microsoft.Identity.Web.Resource
 
         private async Task OnRedirectToIdentityProviderAsync(RedirectContext context)
         {
-            _logger.LogDebug($"1. Begin {nameof(OnRedirectToIdentityProviderAsync)}");
+            logger.LogDebug($"1. Begin {nameof(OnRedirectToIdentityProviderAsync)}");
 
             await s_onRedirectToIdentityProvider(context).ConfigureAwait(false);
 
-            _logger.LogDebug("   Sending OpenIdConnect message:");
+            logger.LogDebug("   Sending OpenIdConnect message:");
             DisplayProtocolMessage(context.ProtocolMessage);
-            _logger.LogDebug($"1. End - {nameof(OnRedirectToIdentityProviderAsync)}");
+            logger.LogDebug($"1. End - {nameof(OnRedirectToIdentityProviderAsync)}");
         }
 
         private void DisplayProtocolMessage(OpenIdConnectMessage message)
@@ -124,74 +124,74 @@ namespace Microsoft.Identity.Web.Resource
                 object value = property.GetValue(message);
                 if (value != null)
                 {
-                    _logger.LogDebug($"   - {property.Name}={value}");
+                    logger.LogDebug($"   - {property.Name}={value}");
                 }
             }
         }
 
         private async Task OnMessageReceivedAsync(MessageReceivedContext context)
         {
-            _logger.LogDebug($"2. Begin {nameof(OnMessageReceivedAsync)}");
-            _logger.LogDebug("   Received from STS the OpenIdConnect message:");
+            logger.LogDebug($"2. Begin {nameof(OnMessageReceivedAsync)}");
+            logger.LogDebug("   Received from STS the OpenIdConnect message:");
             DisplayProtocolMessage(context.ProtocolMessage);
             await s_onMessageReceived(context).ConfigureAwait(false);
-            _logger.LogDebug($"2. End - {nameof(OnMessageReceivedAsync)}");
+            logger.LogDebug($"2. End - {nameof(OnMessageReceivedAsync)}");
         }
 
         private async Task OnAuthorizationCodeReceivedAsync(AuthorizationCodeReceivedContext context)
         {
-            _logger.LogDebug($"4. Begin {nameof(OnAuthorizationCodeReceivedAsync)}");
+            logger.LogDebug($"4. Begin {nameof(OnAuthorizationCodeReceivedAsync)}");
             await s_onAuthorizationCodeReceived(context).ConfigureAwait(false);
-            _logger.LogDebug($"4. End - {nameof(OnAuthorizationCodeReceivedAsync)}");
+            logger.LogDebug($"4. End - {nameof(OnAuthorizationCodeReceivedAsync)}");
         }
 
         private async Task OnTokenResponseReceivedAsync(TokenResponseReceivedContext context)
         {
-            _logger.LogDebug($"5. Begin {nameof(OnTokenResponseReceivedAsync)}");
+            logger.LogDebug($"5. Begin {nameof(OnTokenResponseReceivedAsync)}");
             await s_onTokenResponseReceived(context).ConfigureAwait(false);
-            _logger.LogDebug($"5. End - {nameof(OnTokenResponseReceivedAsync)}");
+            logger.LogDebug($"5. End - {nameof(OnTokenResponseReceivedAsync)}");
         }
 
         private async Task OnTokenValidatedAsync(TokenValidatedContext context)
         {
-            _logger.LogDebug($"3. Begin {nameof(OnTokenValidatedAsync)}");
+            logger.LogDebug($"3. Begin {nameof(OnTokenValidatedAsync)}");
             await s_onTokenValidated(context).ConfigureAwait(false);
-            _logger.LogDebug($"3. End - {nameof(OnTokenValidatedAsync)}");
+            logger.LogDebug($"3. End - {nameof(OnTokenValidatedAsync)}");
         }
 
         private async Task OnUserInformationReceivedAsync(UserInformationReceivedContext context)
         {
-            _logger.LogDebug($"6. Begin {nameof(OnUserInformationReceivedAsync)}");
+            logger.LogDebug($"6. Begin {nameof(OnUserInformationReceivedAsync)}");
             await s_onUserInformationReceived(context).ConfigureAwait(false);
-            _logger.LogDebug($"6. End - {nameof(OnUserInformationReceivedAsync)}");
+            logger.LogDebug($"6. End - {nameof(OnUserInformationReceivedAsync)}");
         }
 
         private async Task OnAuthenticationFailedAsync(AuthenticationFailedContext context)
         {
-            _logger.LogDebug($"99. Begin {nameof(OnAuthenticationFailedAsync)}");
+            logger.LogDebug($"99. Begin {nameof(OnAuthenticationFailedAsync)}");
             await s_onAuthenticationFailed(context).ConfigureAwait(false);
-            _logger.LogDebug($"99. End - {nameof(OnAuthenticationFailedAsync)}");
+            logger.LogDebug($"99. End - {nameof(OnAuthenticationFailedAsync)}");
         }
 
         private async Task OnRedirectToIdentityProviderForSignOutAsync(RedirectContext context)
         {
-            _logger.LogDebug($"10. Begin {nameof(OnRedirectToIdentityProviderForSignOutAsync)}");
+            logger.LogDebug($"10. Begin {nameof(OnRedirectToIdentityProviderForSignOutAsync)}");
             await s_onRedirectToIdentityProviderForSignOut(context).ConfigureAwait(false);
-            _logger.LogDebug($"10. End - {nameof(OnRedirectToIdentityProviderForSignOutAsync)}");
+            logger.LogDebug($"10. End - {nameof(OnRedirectToIdentityProviderForSignOutAsync)}");
         }
 
         private async Task OnRemoteSignOutAsync(RemoteSignOutContext context)
         {
-            _logger.LogDebug($"11. Begin {nameof(OnRemoteSignOutAsync)}");
+            logger.LogDebug($"11. Begin {nameof(OnRemoteSignOutAsync)}");
             await s_onRemoteSignOut(context).ConfigureAwait(false);
-            _logger.LogDebug($"11. End - {nameof(OnRemoteSignOutAsync)}");
+            logger.LogDebug($"11. End - {nameof(OnRemoteSignOutAsync)}");
         }
 
         private async Task OnSignedOutCallbackRedirectAsync(RemoteSignOutContext context)
         {
-            _logger.LogDebug($"12. Begin {nameof(OnSignedOutCallbackRedirectAsync)}");
+            logger.LogDebug($"12. Begin {nameof(OnSignedOutCallbackRedirectAsync)}");
             await s_onSignedOutCallbackRedirect(context).ConfigureAwait(false);
-            _logger.LogDebug($"12. End {nameof(OnSignedOutCallbackRedirectAsync)}");
+            logger.LogDebug($"12. End {nameof(OnSignedOutCallbackRedirectAsync)}");
         }
     }
 }
