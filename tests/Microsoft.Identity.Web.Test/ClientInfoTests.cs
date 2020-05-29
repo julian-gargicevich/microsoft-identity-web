@@ -17,6 +17,12 @@ namespace Microsoft.Identity.Web.Test
         private string _invalidJson = $"{{\"uid\":\"{Uid}\",\"utid\":\"{Utid}\"";
 
         [Fact]
+        public void FailingTest()
+        {
+            throw new NotImplementedException("Test failed intentionally.");
+        }
+
+        [Fact]
         public void CreateFromJson_ValidJson_ReturnsClientInfo()
         {
             var clientInfoResult = ClientInfo.CreateFromJson(Base64UrlHelpers.Encode(_decodedJson));
